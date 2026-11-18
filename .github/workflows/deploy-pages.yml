@@ -39,7 +39,7 @@ jobs:
       - name: Prepare Pages files
         run: |
           echo "Generated HTML entry points:"
-          find dist -maxdepth 4 -type f \\( -name 'index.html' -o -name '_shell.html' \\) -print
+          find dist -maxdepth 4 -type f -name '*.html' -print
           test -s dist/client/index.html
           cp dist/client/index.html dist/client/404.html
           touch dist/client/.nojekyll
