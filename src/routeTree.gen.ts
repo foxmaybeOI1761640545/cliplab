@@ -10,33 +10,208 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthenticatedClipsRouteImport } from './routes/_authenticated/clips'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDataRouteImport } from './routes/_authenticated/data'
+import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
+import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
+import { Route as AuthenticatedThemesRouteImport } from './routes/_authenticated/themes'
+import { Route as AuthenticatedAnimationsIndexRouteImport } from './routes/_authenticated/animations.index'
+import { Route as AuthenticatedAnimationsAnimationIdRouteImport } from './routes/_authenticated/animations.$animationId'
+import { Route as AuthenticatedEpisodesEpisodeIdRouteImport } from './routes/_authenticated/episodes.$episodeId'
+import { Route as AuthenticatedLessonsIndexRouteImport } from './routes/_authenticated/lessons.index'
+import { Route as AuthenticatedLessonsLessonIdRouteImport } from './routes/_authenticated/lessons.$lessonId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedClipsRoute = AuthenticatedClipsRouteImport.update({
+  id: '/clips',
+  path: '/clips',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDataRoute = AuthenticatedDataRouteImport.update({
+  id: '/data',
+  path: '/data',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedResourcesRoute = AuthenticatedResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTasksRoute = AuthenticatedTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedThemesRoute = AuthenticatedThemesRouteImport.update({
+  id: '/themes',
+  path: '/themes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAnimationsIndexRoute =
+  AuthenticatedAnimationsIndexRouteImport.update({
+    id: '/animations/',
+    path: '/animations/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAnimationsAnimationIdRoute =
+  AuthenticatedAnimationsAnimationIdRouteImport.update({
+    id: '/animations/$animationId',
+    path: '/animations/$animationId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEpisodesEpisodeIdRoute =
+  AuthenticatedEpisodesEpisodeIdRouteImport.update({
+    id: '/episodes/$episodeId',
+    path: '/episodes/$episodeId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedLessonsIndexRoute =
+  AuthenticatedLessonsIndexRouteImport.update({
+    id: '/lessons/',
+    path: '/lessons/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedLessonsLessonIdRoute =
+  AuthenticatedLessonsLessonIdRouteImport.update({
+    id: '/lessons/$lessonId',
+    path: '/lessons/$lessonId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/clips': typeof AuthenticatedClipsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/data': typeof AuthenticatedDataRoute
+  '/resources': typeof AuthenticatedResourcesRoute
+  '/tasks': typeof AuthenticatedTasksRoute
+  '/themes': typeof AuthenticatedThemesRoute
+  '/animations/$animationId': typeof AuthenticatedAnimationsAnimationIdRoute
+  '/episodes/$episodeId': typeof AuthenticatedEpisodesEpisodeIdRoute
+  '/lessons/$lessonId': typeof AuthenticatedLessonsLessonIdRoute
+  '/animations/': typeof AuthenticatedAnimationsIndexRoute
+  '/lessons/': typeof AuthenticatedLessonsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/clips': typeof AuthenticatedClipsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/data': typeof AuthenticatedDataRoute
+  '/resources': typeof AuthenticatedResourcesRoute
+  '/tasks': typeof AuthenticatedTasksRoute
+  '/themes': typeof AuthenticatedThemesRoute
+  '/animations/$animationId': typeof AuthenticatedAnimationsAnimationIdRoute
+  '/episodes/$episodeId': typeof AuthenticatedEpisodesEpisodeIdRoute
+  '/lessons/$lessonId': typeof AuthenticatedLessonsLessonIdRoute
+  '/animations': typeof AuthenticatedAnimationsIndexRoute
+  '/lessons': typeof AuthenticatedLessonsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/clips': typeof AuthenticatedClipsRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/data': typeof AuthenticatedDataRoute
+  '/_authenticated/resources': typeof AuthenticatedResourcesRoute
+  '/_authenticated/tasks': typeof AuthenticatedTasksRoute
+  '/_authenticated/themes': typeof AuthenticatedThemesRoute
+  '/_authenticated/animations/$animationId': typeof AuthenticatedAnimationsAnimationIdRoute
+  '/_authenticated/episodes/$episodeId': typeof AuthenticatedEpisodesEpisodeIdRoute
+  '/_authenticated/lessons/$lessonId': typeof AuthenticatedLessonsLessonIdRoute
+  '/_authenticated/animations/': typeof AuthenticatedAnimationsIndexRoute
+  '/_authenticated/lessons/': typeof AuthenticatedLessonsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/clips'
+    | '/dashboard'
+    | '/data'
+    | '/resources'
+    | '/tasks'
+    | '/themes'
+    | '/animations/$animationId'
+    | '/episodes/$episodeId'
+    | '/lessons/$lessonId'
+    | '/animations/'
+    | '/lessons/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/clips'
+    | '/dashboard'
+    | '/data'
+    | '/resources'
+    | '/tasks'
+    | '/themes'
+    | '/animations/$animationId'
+    | '/episodes/$episodeId'
+    | '/lessons/$lessonId'
+    | '/animations'
+    | '/lessons'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
+    | '/_authenticated/clips'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/data'
+    | '/_authenticated/resources'
+    | '/_authenticated/tasks'
+    | '/_authenticated/themes'
+    | '/_authenticated/animations/$animationId'
+    | '/_authenticated/episodes/$episodeId'
+    | '/_authenticated/lessons/$lessonId'
+    | '/_authenticated/animations/'
+    | '/_authenticated/lessons/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +223,144 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/clips': {
+      id: '/_authenticated/clips'
+      path: '/clips'
+      fullPath: '/clips'
+      preLoaderRoute: typeof AuthenticatedClipsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/data': {
+      id: '/_authenticated/data'
+      path: '/data'
+      fullPath: '/data'
+      preLoaderRoute: typeof AuthenticatedDataRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/resources': {
+      id: '/_authenticated/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof AuthenticatedResourcesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tasks': {
+      id: '/_authenticated/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AuthenticatedTasksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/themes': {
+      id: '/_authenticated/themes'
+      path: '/themes'
+      fullPath: '/themes'
+      preLoaderRoute: typeof AuthenticatedThemesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/animations/': {
+      id: '/_authenticated/animations/'
+      path: '/animations'
+      fullPath: '/animations/'
+      preLoaderRoute: typeof AuthenticatedAnimationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/animations/$animationId': {
+      id: '/_authenticated/animations/$animationId'
+      path: '/animations/$animationId'
+      fullPath: '/animations/$animationId'
+      preLoaderRoute: typeof AuthenticatedAnimationsAnimationIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/episodes/$episodeId': {
+      id: '/_authenticated/episodes/$episodeId'
+      path: '/episodes/$episodeId'
+      fullPath: '/episodes/$episodeId'
+      preLoaderRoute: typeof AuthenticatedEpisodesEpisodeIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lessons/': {
+      id: '/_authenticated/lessons/'
+      path: '/lessons'
+      fullPath: '/lessons/'
+      preLoaderRoute: typeof AuthenticatedLessonsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lessons/$lessonId': {
+      id: '/_authenticated/lessons/$lessonId'
+      path: '/lessons/$lessonId'
+      fullPath: '/lessons/$lessonId'
+      preLoaderRoute: typeof AuthenticatedLessonsLessonIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedClipsRoute: typeof AuthenticatedClipsRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDataRoute: typeof AuthenticatedDataRoute
+  AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
+  AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
+  AuthenticatedThemesRoute: typeof AuthenticatedThemesRoute
+  AuthenticatedAnimationsAnimationIdRoute: typeof AuthenticatedAnimationsAnimationIdRoute
+  AuthenticatedEpisodesEpisodeIdRoute: typeof AuthenticatedEpisodesEpisodeIdRoute
+  AuthenticatedLessonsLessonIdRoute: typeof AuthenticatedLessonsLessonIdRoute
+  AuthenticatedAnimationsIndexRoute: typeof AuthenticatedAnimationsIndexRoute
+  AuthenticatedLessonsIndexRoute: typeof AuthenticatedLessonsIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedClipsRoute: AuthenticatedClipsRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDataRoute: AuthenticatedDataRoute,
+  AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
+  AuthenticatedTasksRoute: AuthenticatedTasksRoute,
+  AuthenticatedThemesRoute: AuthenticatedThemesRoute,
+  AuthenticatedAnimationsAnimationIdRoute:
+    AuthenticatedAnimationsAnimationIdRoute,
+  AuthenticatedEpisodesEpisodeIdRoute: AuthenticatedEpisodesEpisodeIdRoute,
+  AuthenticatedLessonsLessonIdRoute: AuthenticatedLessonsLessonIdRoute,
+  AuthenticatedAnimationsIndexRoute: AuthenticatedAnimationsIndexRoute,
+  AuthenticatedLessonsIndexRoute: AuthenticatedLessonsIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
