@@ -8,6 +8,9 @@ export const getRouter = () => {
 
   const router = createRouter({
     routeTree,
+    // GitHub Pages serves this project under /cliplab/ rather than the domain root.
+    // Vite exposes the same base in dev (/) and in the production Pages build.
+    basepath: import.meta.env.BASE_URL,
     context: { queryClient },
     scrollRestoration: true,
     // Lets Query own freshness; set caching defaults on the QueryClient, not the router.

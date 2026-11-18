@@ -14,6 +14,11 @@ type AuthSearch = { redirect?: string };
 const safePath = (p: string | undefined | null) => (p && p.startsWith("/") && !p.startsWith("//") ? p : "/dashboard");
 const STORE_KEY = "cliplab.redirect";
 
+// Build absolute callback URLs from Vite's configured base so GitHub Pages' /cliplab/
+// prefix is preserved. This also remains correct for root-hosted local/Lovable previews.
+const appUrl = (path: string) =>
+  new URL(path.replace(/^\/+/, ""), new URL(import.meta.env.BASE_URL, window.location.origin)).toString();
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>): AuthSearch => ({
@@ -73,14 +78,14 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/auth" },
+          options: { emailRedirectTo: appUrl("auth") },
         });
         if (error) throw error;
         if (data.session) done();
         else setSentConfirm(true);
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: appUrl("reset-password"),
         });
         if (error) throw error;
         toast.success("重置密码邮件已发送，请查收");
@@ -96,7 +101,7 @@ function AuthPage() {
   const oauth = async (provider: "google" | "lovable") => {
     setBusy(provider);
     sessionStorage.setItem(STORE_KEY, target);
-    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin + "/auth" });
+    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: appUrl("auth") });
     if (result.error) {
       toast.error("登录失败，请稍后重试");
       setBusy(null);
