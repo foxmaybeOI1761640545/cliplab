@@ -450,7 +450,7 @@ function ClipLibraryPage() {
           </div>
 
           <TabsContent value="cards" className="mt-0">
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="performance-list grid gap-3 lg:grid-cols-2">
               {filtered.map((clip) => {
                 const animation = data.animationById.get(clip.animation_id);
                 const episode = clip.episode_id ? data.episodeById.get(clip.episode_id) : undefined;

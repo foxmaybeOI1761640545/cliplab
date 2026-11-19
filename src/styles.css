@@ -222,7 +222,19 @@
   font-variant-numeric: tabular-nums;
 }
 
+@layer utilities {
+  /* Defer off-screen card layout/painting on long result grids. */
+  .performance-list > * {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 22rem;
+  }
+}
+
 @media print {
+  .performance-list > * {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
   @page {
     margin: 14mm;
   }

@@ -17,6 +17,7 @@ import { FormsProvider, useForms } from "./forms-context";
 import { ConfirmProvider } from "./confirm-context";
 import { pageTitle } from "./nav";
 import { ThemeToggle } from "./theme-toggle";
+import { AllDataProvider } from "@/lib/db";
 
 function QuickAdd() {
   const f = useForms();
@@ -65,7 +66,8 @@ export function AppShell() {
   return (
     <ConfirmProvider>
       <FormsProvider>
-        <SidebarProvider>
+        <AllDataProvider>
+          <SidebarProvider>
           <div className="flex min-h-screen w-full">
             <AppSidebar />
             <SidebarInset className="min-w-0 bg-background">
@@ -86,7 +88,8 @@ export function AppShell() {
               </main>
             </SidebarInset>
           </div>
-        </SidebarProvider>
+          </SidebarProvider>
+        </AllDataProvider>
       </FormsProvider>
     </ConfirmProvider>
   );

@@ -134,7 +134,7 @@ function EpisodeDetailPage() {
             description="后续可以在片段库中为这部动画的具体集数建立课堂片段。"
           />
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="performance-list grid gap-3 md:grid-cols-2">
             {clips.map((clip) => (
               <article key={clip.id} className="space-y-3 rounded-xl border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">

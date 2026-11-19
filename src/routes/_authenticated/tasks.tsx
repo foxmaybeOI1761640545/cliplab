@@ -144,7 +144,7 @@ function PrepActionsPage() {
             action={<Button onClick={() => forms.openTask()}><Plus className="size-4" />新建行动</Button>}
           />
         ) : (
-          <div className="grid gap-3 xl:grid-cols-2">
+          <div className="performance-list grid gap-3 xl:grid-cols-2">
             {filtered.map((task) => (
               <TaskCard
                 key={task.id}
