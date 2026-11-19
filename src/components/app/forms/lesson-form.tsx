@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "../form-bits";
 import { FormDialog, emptyToNull } from "./form-dialog";
+import { DemoSwitchField } from "@/components/app/demo-switch-field";
 import { useAllData, useDb, type LessonPlan } from "@/lib/db";
 import { DEFAULT_GRADE, DEFAULT_LESSON_MINUTES, GRADES, PRESET_THEMES } from "@/lib/constants";
 
@@ -21,6 +22,7 @@ export function LessonForm({
   const db = useDb();
   const navigate = useNavigate();
   const [v, setV] = useState({
+    is_demo: record?.is_demo ?? false,
     title: record?.title ?? "",
     theme: record?.theme ?? "",
     grade: record?.grade ?? DEFAULT_GRADE,
@@ -42,6 +44,7 @@ export function LessonForm({
     setBusy(true);
     try {
       const payload = {
+        is_demo: v.is_demo,
         title: v.title.trim(),
         theme: emptyToNull(v.theme),
         grade: v.grade.trim() || DEFAULT_GRADE,
@@ -105,6 +108,7 @@ export function LessonForm({
       <Field label="备注" htmlFor="ls-notes">
         <Textarea id="ls-notes" rows={2} value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} />
       </Field>
+      <DemoSwitchField checked={v.is_demo} onCheckedChange={(checked) => setV((current) => ({ ...current, is_demo: checked }))} />
     </FormDialog>
   );
 }
