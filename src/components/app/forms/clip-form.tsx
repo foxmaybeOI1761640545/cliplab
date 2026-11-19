@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FormGroup, SimpleSelect, ThemeInput } from "../form-bits";
 import { FormDialog, emptyToNull, numOrNull } from "./form-dialog";
+import { DemoSwitchField } from "@/components/app/demo-switch-field";
 import { episodeLabel, normalize, useAllData, useDb, type Clip } from "@/lib/db";
 import { CLIP_SOFT_LIMIT_SECONDS, CLIP_STATUSES, DEFAULT_GRADE, GRADES, STAGES } from "@/lib/constants";
 import { clipDuration, formatDuration, formatTimecode, parseTimecode, secondsToMinutes } from "@/lib/time";
@@ -25,6 +26,7 @@ export function ClipForm({
   const data = useAllData();
   const db = useDb();
   const [v, setV] = useState({
+    is_demo: record?.is_demo ?? false,
     name: record?.name ?? "",
     animation_id: record?.animation_id ?? defaults?.animation_id ?? null,
     episode_id: record?.episode_id ?? defaults?.episode_id ?? null,
@@ -81,6 +83,7 @@ export function ClipForm({
     setBusy(true);
     try {
       const payload = {
+        is_demo: v.is_demo,
         name: v.name.trim(),
         animation_id: v.animation_id!,
         episode_id: v.episode_id,
@@ -217,6 +220,7 @@ export function ClipForm({
           <Textarea id="clip-tn" rows={2} value={v.teaching_notes} onChange={(e) => set({ teaching_notes: e.target.value })} />
         </Field>
       </FormGroup>
+      <DemoSwitchField checked={v.is_demo} onCheckedChange={(checked) => setV((current) => ({ ...current, is_demo: checked }))} />
     </FormDialog>
   );
 }
