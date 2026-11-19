@@ -166,7 +166,7 @@ function ResourceReviewPage() {
             action={<Button onClick={() => forms.openResource()}><Plus className="size-4" />新增资源</Button>}
           />
         ) : (
-          <div className="grid gap-3 xl:grid-cols-2">
+          <div className="performance-list grid gap-3 xl:grid-cols-2">
             {filtered.map((resource) => (
               <ResourceCard
                 key={resource.id}

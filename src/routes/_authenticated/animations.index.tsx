@@ -143,7 +143,7 @@ function AnimationCatalogPage() {
           action={<Button variant="outline" onClick={() => { setQuery(""); setTheme(null); }}>清除筛选</Button>}
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="performance-list grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map((animation) => {
             const episodes = episodeCounts.get(animation.id) ?? 0;
             const clips = data.clipsByAnimation.get(animation.id)?.length ?? 0;

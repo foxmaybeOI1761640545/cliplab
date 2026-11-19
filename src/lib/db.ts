@@ -1,5 +1,5 @@
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Animation = Tables<"animations">;
@@ -115,7 +115,7 @@ const tableQuery = <T extends TableName>(table: T) =>
   queryOptions({
     queryKey: ["db", table],
     queryFn: () => readTable(table),
-    staleTime: 5_000,
+    staleTime: 60_000,
   });
 
 export const q = {
@@ -130,7 +130,7 @@ export const q = {
 
 export const allQueries = Object.values(q);
 
-export function useAllData() {
+function useAllDataQuery() {
   const animations = useSuspenseQuery(q.animations).data;
   const episodes = useSuspenseQuery(q.episodes).data;
   const clips = useSuspenseQuery(q.clips).data;
@@ -176,7 +176,20 @@ export function useAllData() {
     };
   }, [animations, episodes, clips, resources, lessonPlans, lessonItems, tasks]);
 }
-export type AllData = ReturnType<typeof useAllData>;
+export type AllData = ReturnType<typeof useAllDataQuery>;
+
+const AllDataContext = createContext<AllData | null>(null);
+
+export function AllDataProvider({ children }: { children: ReactNode }) {
+  const data = useAllDataQuery();
+  return <AllDataContext.Provider value={data}>{children}</AllDataContext.Provider>;
+}
+
+export function useAllData(): AllData {
+  const data = useContext(AllDataContext);
+  if (!data) throw new Error("useAllData 必须在 AllDataProvider 内使用");
+  return data;
+}
 
 /* ---------- 本地数据写入 ---------- */
 
@@ -211,17 +224,37 @@ async function updateRow<T extends TableName>(table: T, id: string, values: Tabl
   return updated;
 }
 
-async function removeRows(table: TableName, ids: string | string[]) {
-  const targets = new Set(Array.isArray(ids) ? ids : [ids]);
-  if (targets.size === 0) return;
+const REMOVE_AFFECTED_STORES: Record<TableName, TableName[]> = {
+  animations: ["animations", "episodes", "clips", "resources", "lesson_items", "action_tasks"],
+  episodes: ["episodes", "clips", "resources", "lesson_items", "action_tasks"],
+  clips: ["clips", "resources", "lesson_items", "action_tasks"],
+  resources: ["resources"],
+  lesson_plans: ["lesson_plans", "lesson_items", "action_tasks"],
+  lesson_items: ["lesson_items"],
+  action_tasks: ["action_tasks"],
+};
 
+async function removeRows(table: TableName, ids: string | string[]): Promise<TableName[]> {
+  const targets = new Set(Array.isArray(ids) ? ids : [ids]);
+  if (targets.size === 0) return [];
   const db = await openDatabase();
-  const transaction = db.transaction(STORE_NAMES, "readwrite");
+
+  // Leaf records have no dependent rows, so delete them without reading other stores.
+  if (table === "resources" || table === "lesson_items" || table === "action_tasks") {
+    const transaction = db.transaction(table, "readwrite");
+    const done = transactionDone(transaction);
+    const store = transaction.objectStore(table);
+    for (const id of targets) store.delete(id);
+    await done;
+    return [table];
+  }
+
+  const affectedStores = REMOVE_AFFECTED_STORES[table];
+  const transaction = db.transaction(affectedStores, "readwrite");
   const done = transactionDone(transaction);
-  const all = await Promise.all(
-    STORE_NAMES.map((name) => requestResult(transaction.objectStore(name).getAll())),
-  );
-  const rows = Object.fromEntries(STORE_NAMES.map((name, i) => [name, all[i]])) as Record<TableName, Record<string, unknown>[]>;
+  const all = await Promise.all(affectedStores.map((name) => requestResult(transaction.objectStore(name).getAll())));
+  const rows = Object.fromEntries(STORE_NAMES.map((name) => [name, []])) as Record<TableName, Record<string, unknown>[]>;
+  affectedStores.forEach((name, index) => { rows[name] = all[index] as Record<string, unknown>[]; });
   const now = new Date().toISOString();
   const removeIds = (name: TableName, set: Set<string>) => {
     for (const id of set) transaction.objectStore(name).delete(id);
@@ -284,12 +317,12 @@ async function removeRows(table: TableName, ids: string | string[]) {
       removeIds(table, targets);
   }
   await done;
+  return affectedStores;
 }
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function useDb() {
   const qc = useQueryClient();
-  const refresh = () => qc.invalidateQueries({ queryKey: ["db"] });
+  const refresh = (table?: TableName) => qc.invalidateQueries({ queryKey: table ? ["db", table] : ["db"] });
   return {
     refresh,
     async insert<T extends TableName>(table: T, values: TablesInsert<T> | TablesInsert<T>[]) {
@@ -310,13 +343,13 @@ export function useDb() {
       } catch (error) {
         throw new Error(friendlyError((error as Error).message));
       }
-      await refresh();
+      await refresh(table);
       return rows;
     },
     async update<T extends TableName>(table: T, id: string, values: TablesUpdate<T>) {
       try {
         const row = await updateRow(table, id, values);
-        await refresh();
+        await refresh(table);
         return row;
       } catch (error) {
         throw new Error(friendlyError((error as Error).message));
@@ -324,11 +357,11 @@ export function useDb() {
     },
     async remove(table: TableName, ids: string | string[]) {
       try {
-        await removeRows(table, ids);
+        const changedTables = await removeRows(table, ids);
       } catch (error) {
         throw new Error(friendlyError((error as Error).message));
       }
-      await refresh();
+      await Promise.all(changedTables.map((name) => refresh(name)));
     },
   };
 }

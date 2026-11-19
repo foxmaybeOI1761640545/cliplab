@@ -80,7 +80,7 @@ function LessonPlansPage() {
       ) : filtered.length === 0 ? (
         <EmptyState title="没有找到符合条件的方案" description="试试其他关键词，或清空搜索框。" />
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="performance-list grid gap-4 xl:grid-cols-2">
           {filtered.map((lesson) => {
             const items = data.itemsByLesson.get(lesson.id) ?? [];
             const summary = summarizeLesson(items, lesson.total_minutes);
