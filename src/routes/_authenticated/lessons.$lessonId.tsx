@@ -1,9 +1,9 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, Clock3, Eye, FileText, Pencil, Plus, Printer, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Clock3, Eye, Film, Pencil, Plus, Printer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { PageHeader, EmptyState, InfoRow } from "@/components/app/states";
+import { PageHeader, EmptyState } from "@/components/app/states";
 import { ThemeChips } from "@/components/app/tone-badge";
 import { LessonItemFormDialog } from "@/components/app/forms/lesson-item-form";
 import { useForms } from "@/components/app/forms-context";
@@ -18,7 +18,7 @@ import {
 } from "@/lib/db";
 import { STAGES, STAGE_HINTS, type Stage } from "@/lib/constants";
 import { describeLessonTime, summarizeLesson } from "@/lib/lesson";
-import { formatDuration, formatMinutes, formatTimecode } from "@/lib/time";
+import { formatDuration, formatTimecode } from "@/lib/time";
 
 type LessonSearch = { mode?: "edit" | "preview" };
 
