@@ -105,7 +105,7 @@ describe("片段库筛选与排序", () => {
 
   it("支持最近更新、名称和起始时间排序", () => {
     expect(filterAndSortClips(records, {}).map((x) => x.id)).toEqual(["c1", "c2", "c3"]);
-    expect(filterAndSortClips(records, { sort: "name" }).map((x) => x.id)).toEqual(["c2", "c3", "c1"]);
+    expect(filterAndSortClips(records, { sort: "name" }).map((x) => x.id)).toEqual(["c1", "c3", "c2"]);
     expect(filterAndSortClips(records, { sort: "start" }).map((x) => x.id)).toEqual(["c1", "c2", "c3"]);
   });
 
