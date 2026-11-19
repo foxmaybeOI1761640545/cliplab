@@ -37,12 +37,10 @@ function Index() {
           </span>
           <span className="font-display font-semibold">动画课堂 ClipLab</span>
         </span>
-        <Button asChild variant="outline">
-          <Link to="/auth">登录</Link>
-        </Button>
+        <Button asChild variant="outline"><Link to="/dashboard">进入工作台</Link></Button>
       </header>
       <main className="mx-auto max-w-6xl px-5 pb-20 pt-10 sm:pt-16">
-        <p className="mb-3 inline-flex rounded-full bg-warm-soft px-3 py-1 text-xs font-medium text-warm-foreground">七年级 · 个人备课工具</p>
+        <p className="mb-3 inline-flex rounded-full bg-warm-soft px-3 py-1 text-xs font-medium text-warm-foreground">七年级 · 本地优先 · 无需注册</p>
         <h1 className="max-w-3xl text-3xl font-semibold leading-tight sm:text-5xl">
           把动画片段，
           <br />
@@ -52,12 +50,8 @@ function Index() {
           整理国产动画的集数与短片段，拆解友情、自制力、情绪管理、合作等主题，设计提问与讨论，并安排完整的课堂流程。
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild size="lg">
-            <Link to="/dashboard">进入备课工作台</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link to="/auth">注册账户</Link>
-          </Button>
+          <Button asChild size="lg"><Link to="/dashboard">进入备课工作台</Link></Button>
+          <Button asChild size="lg" variant="outline"><Link to="/data">管理本地数据与备份</Link></Button>
         </div>
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {FEATURES.map((f) => (
@@ -69,7 +63,7 @@ function Index() {
           ))}
         </div>
         <p className="mt-10 text-xs text-muted-foreground">
-          本工具只保存你填写的链接与核实记录，不提供视频下载，也不会绕过任何平台的付费、登录或版权限制。
+          当前资料保存在这台设备的浏览器中。请定期导出 JSON 备份；更换浏览器或清除网站数据前，先保存备份。本工具只保存你填写的链接与核实记录，不提供视频下载。
         </p>
       </main>
     </div>
