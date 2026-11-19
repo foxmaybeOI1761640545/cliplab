@@ -35,11 +35,13 @@ export function AnimationForm({
   const submit = async () => {
     const name = v.name.trim();
     if (!name) return setErr("请填写动画名称");
-    const key = normalize(name);
-    const dup = data.animations.find(
-      (a) => a.id !== record?.id && (normalize(a.name) === key || splitTags(a.aliases).some((al) => normalize(al) === key)),
-    );
-    if (dup) return setErr(`已登记过「${dup.name}」，请直接在该作品下添加集数，避免重复`);
+    const newKeys = new Set([name, ...splitTags(v.aliases)].map(normalize).filter(Boolean));
+    const dup = data.animations.find((a) => {
+      if (a.id === record?.id) return false;
+      const existingKeys = [a.name, ...splitTags(a.aliases)].map(normalize).filter(Boolean);
+      return existingKeys.some((candidate) => newKeys.has(candidate));
+    });
+    if (dup) return setErr(`名称或别名与「${dup.name}」重复，请直接在该作品下添加集数`);
     setErr(null);
     setBusy(true);
     try {
