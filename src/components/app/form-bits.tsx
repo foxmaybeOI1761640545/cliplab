@@ -149,7 +149,7 @@ export function ThemeInput({
             </span>
           ))}
       </div>
-      <div className="flex gap-2">
+      <div className="flex w-full min-w-0 items-center gap-2">
         <Input
           id={id}
           value={draft}
@@ -161,12 +161,12 @@ export function ThemeInput({
             }
           }}
           placeholder="自定义主题，回车添加"
-          className="h-8 bg-card text-sm"
+          className="h-8 min-w-0 flex-1 bg-card text-sm"
         />
         <button
           type="button"
           onClick={add}
-          className="inline-flex h-8 items-center gap-1 rounded-md border bg-card px-2.5 text-xs hover:bg-accent"
+          className="inline-flex h-8 min-w-[4.5rem] shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border bg-card px-3 text-xs hover:bg-accent"
         >
           <Plus className="size-3" />
           添加
