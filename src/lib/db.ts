@@ -1,5 +1,5 @@
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, createElement, useContext, useMemo, type ReactNode } from "react";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Animation = Tables<"animations">;
@@ -182,7 +182,7 @@ const AllDataContext = createContext<AllData | null>(null);
 
 export function AllDataProvider({ children }: { children: ReactNode }) {
   const data = useAllDataQuery();
-  return <AllDataContext.Provider value={data}>{children}</AllDataContext.Provider>;
+  return createElement(AllDataContext.Provider, { value: data }, children);
 }
 
 export function useAllData(): AllData {
