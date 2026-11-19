@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, ThemeInput } from "../form-bits";
 import { FormDialog, emptyToNull } from "./form-dialog";
-import { normalize, useAllData, useDb, type Animation } from "@/lib/db";
+import { useAllData, useDb, type Animation } from "@/lib/db";
 import { splitTags } from "@/lib/csv";
 
 export function AnimationForm({
