@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, SimpleSelect } from "../form-bits";
 import { FormDialog, emptyToNull } from "./form-dialog";
+import { DemoSwitchField } from "@/components/app/demo-switch-field";
 import { episodeLabel, useAllData, useDb, type ActionTask } from "@/lib/db";
 import { PRIORITIES, TASK_STATUSES, TASK_TYPES } from "@/lib/constants";
 
@@ -26,6 +27,7 @@ export function TaskForm({
   const db = useDb();
   const src = record ?? defaults ?? {};
   const [v, setV] = useState({
+    is_demo: record?.is_demo ?? false,
     title: src.title ?? "",
     task_type: src.task_type ?? "其他",
     priority: src.priority ?? "中",
@@ -48,6 +50,7 @@ export function TaskForm({
     setBusy(true);
     try {
       const payload = {
+        is_demo: v.is_demo,
         title: v.title.trim(),
         task_type: v.task_type,
         priority: v.priority,
@@ -128,6 +131,7 @@ export function TaskForm({
       <Field label="备注" htmlFor="tk-notes">
         <Textarea id="tk-notes" rows={3} value={v.notes} onChange={(e) => set({ notes: e.target.value })} />
       </Field>
+      <DemoSwitchField checked={v.is_demo} onCheckedChange={(checked) => setV((current) => ({ ...current, is_demo: checked }))} />
     </FormDialog>
   );
 }
