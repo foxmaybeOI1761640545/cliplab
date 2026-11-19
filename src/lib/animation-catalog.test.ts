@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterAndSortAnimations, type AnimationCatalogRecord } from "./animation-catalog";
+import { filterAndSortAnimations, findDuplicateAnimation, type AnimationCatalogRecord } from "./animation-catalog";
 
 const records: AnimationCatalogRecord[] = [
   {
@@ -46,5 +46,12 @@ describe("动画作品列表筛选与排序", () => {
   it("支持名称排序和集数排序", () => {
     expect(filterAndSortAnimations(records, { sort: "name" }).map((x) => x.id)).toEqual(["a2", "a1"]);
     expect(filterAndSortAnimations(records, { sort: "episodes" }, new Map([["a1", 2], ["a2", 8]])).map((x) => x.id)).toEqual(["a2", "a1"]);
+  });
+
+  it("名称与别名交叉重复时阻止新增，但允许编辑自身", () => {
+    expect(findDuplicateAnimation(records, { name: "星际冒险队" })?.id).toBe("a1");
+    expect(findDuplicateAnimation(records, { name: "新名称", aliases: "山海少年" })?.id).toBe("a2");
+    expect(findDuplicateAnimation(records, { name: "星际小队", aliases: "星际冒险队", excludeId: "a1" })).toBeUndefined();
+    expect(findDuplicateAnimation(records, { name: "全新作品", aliases: "新别名" })).toBeUndefined();
   });
 });
