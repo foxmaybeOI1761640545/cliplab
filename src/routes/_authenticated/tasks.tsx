@@ -36,6 +36,7 @@ function PrepActionsPage() {
   const [statusFilter, setStatusFilter] = useState("全部");
   const [priorityFilter, setPriorityFilter] = useState("全部");
   const [demoFilter, setDemoFilter] = useState<DemoFilter>("真实数据");
+  const [showAllSuggestions, setShowAllSuggestions] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const today = todayISO();
 
@@ -97,7 +98,10 @@ function PrepActionsPage() {
 
       <Section
         title={<span className="flex items-center gap-2"><Sparkles className="size-4 text-primary" />下一步备课建议</span>}
-        action={<ToneBadge tone={untrackedSuggestions.length ? "warning" : "success"}>{untrackedSuggestions.length} 项待加入</ToneBadge>}
+        action={<div className="flex items-center gap-2">
+          <ToneBadge tone={untrackedSuggestions.length ? "warning" : "success"}>{untrackedSuggestions.length} 项待加入</ToneBadge>
+          {untrackedSuggestions.length > 12 && <Button size="sm" variant="ghost" onClick={() => setShowAllSuggestions((value) => !value)}>{showAllSuggestions ? "收起" : "显示全部"}</Button>}
+        </div>}
       >
         <p className="mb-3 text-xs leading-5 text-muted-foreground">
           建议根据真实数据自动整理；DEMO 记录不会生成真实备课任务。你确认后才会写入行动列表，已有进行中的行动不会重复添加。
@@ -108,7 +112,7 @@ function PrepActionsPage() {
           </div>
         ) : (
           <div className="grid gap-2 xl:grid-cols-2">
-            {untrackedSuggestions.slice(0, 12).map((suggestion) => (
+            {untrackedSuggestions.slice(0, showAllSuggestions ? untrackedSuggestions.length : 12).map((suggestion) => (
               <SuggestionCard
                 key={suggestion.id}
                 suggestion={suggestion}
@@ -117,8 +121,8 @@ function PrepActionsPage() {
             ))}
           </div>
         )}
-        {untrackedSuggestions.length > 12 && (
-          <p className="mt-3 text-xs text-muted-foreground">另有 {untrackedSuggestions.length - 12} 项建议未展开，后续可继续逐项添加。</p>
+        {untrackedSuggestions.length > 12 && !showAllSuggestions && (
+          <p className="mt-3 text-xs text-muted-foreground">当前先显示前 12 项，可点击「显示全部」查看其余建议。</p>
         )}
       </Section>
 
