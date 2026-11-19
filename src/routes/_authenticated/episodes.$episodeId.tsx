@@ -118,7 +118,14 @@ function EpisodeDetailPage() {
             <h2 className="text-lg font-semibold">关联片段</h2>
             <p className="mt-1 text-sm text-muted-foreground">这集目前登记了 {clips.length} 个片段。</p>
           </div>
-          <Button asChild variant="outline" size="sm"><Link to="/clips">打开片段库</Link></Button>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => forms.openClip(undefined, { animation_id: episode.animation_id, episode_id: episode.id })}>
+              <Plus className="size-4" />新增本集片段
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/clips" search={{ animation: episode.animation_id, episode: episode.id }}>查看本集片段</Link>
+            </Button>
+          </div>
         </div>
         {clips.length === 0 ? (
           <EmptyState
@@ -131,7 +138,7 @@ function EpisodeDetailPage() {
             {clips.map((clip) => (
               <article key={clip.id} className="space-y-3 rounded-xl border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="font-medium">{clip.name}</h3>
+                  <Link to="/clips" search={{ clip: clip.id }} className="font-medium hover:text-primary">{clip.name}</Link>
                   <ClipStatusBadge value={clip.status} />
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
