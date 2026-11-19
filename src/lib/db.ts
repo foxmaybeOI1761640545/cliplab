@@ -1,6 +1,5 @@
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Animation = Tables<"animations">;
@@ -20,19 +19,103 @@ export type TableName =
   | "lesson_items"
   | "action_tasks";
 
+const STORE_NAMES: TableName[] = [
+  "animations",
+  "episodes",
+  "clips",
+  "resources",
+  "lesson_plans",
+  "lesson_items",
+  "action_tasks",
+];
+const DATABASE_NAME = "cliplab-local";
+const DATABASE_VERSION = 1;
+const LOCAL_USER_ID = "00000000-0000-4000-8000-000000000001";
+
+type BackupData = { [K in TableName]: Tables<K>[] };
+type BackupFile = {
+  format: "cliplab-local-backup";
+  version: 1;
+  exportedAt: string;
+  data: BackupData;
+};
+
+let databasePromise: Promise<IDBDatabase> | undefined;
+
+function openDatabase(): Promise<IDBDatabase> {
+  if (typeof indexedDB === "undefined") {
+    return Promise.reject(new Error("当前环境不支持 IndexedDB，请使用较新的浏览器。"));
+  }
+  if (!databasePromise) {
+    databasePromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        for (const name of STORE_NAMES) {
+          if (!db.objectStoreNames.contains(name)) {
+            const store = db.createObjectStore(name, { keyPath: "id" });
+            store.createIndex("updated_at", "updated_at", { unique: false });
+            if (name === "animations") store.createIndex("name", "name", { unique: true });
+          }
+        }
+      };
+      request.onsuccess = () => {
+        const db = request.result;
+        db.onversionchange = () => db.close();
+        resolve(db);
+      };
+      request.onerror = () => {
+        databasePromise = undefined;
+        reject(request.error ?? new Error("无法打开本地数据库"));
+      };
+      request.onblocked = () => {
+        databasePromise = undefined;
+        reject(new Error("本地数据库正在被其他标签页占用，请关闭其他 ClipLab 标签页后重试。"));
+      };
+    });
+  }
+  return databasePromise;
+}
+
+function requestResult<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error ?? new Error("本地数据库操作失败"));
+  });
+}
+
+function transactionDone(transaction: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onabort = () => reject(transaction.error ?? new Error("本地数据库事务已取消"));
+    transaction.onerror = () => reject(transaction.error ?? new Error("本地数据库事务失败"));
+  });
+}
+
+const makeId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `local-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+async function readTable<T extends TableName>(table: T): Promise<Tables<T>[]> {
+  const db = await openDatabase();
+  const transaction = db.transaction(table, "readonly");
+  const done = transactionDone(transaction);
+  const rows = await requestResult(transaction.objectStore(table).getAll()) as Tables<T>[];
+  await done;
+  return rows.sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+}
+
+async function readAllTables(): Promise<BackupData> {
+  const entries = await Promise.all(STORE_NAMES.map(async (name) => [name, await readTable(name)] as const));
+  return Object.fromEntries(entries) as BackupData;
+}
+
 const tableQuery = <T extends TableName>(table: T) =>
   queryOptions({
     queryKey: ["db", table],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from(table)
-        .select("*")
-        .order("updated_at", { ascending: false })
-        .limit(5000);
-      if (error) throw new Error(error.message);
-      return (data ?? []) as unknown as Tables<T>[];
-    },
-    staleTime: 15_000,
+    queryFn: () => readTable(table),
+    staleTime: 5_000,
   });
 
 export const q = {
@@ -95,6 +178,114 @@ export function useAllData() {
 }
 export type AllData = ReturnType<typeof useAllData>;
 
+/* ---------- 本地数据写入 ---------- */
+
+async function insertRows<T extends TableName>(table: T, rows: Tables<T>[]) {
+  const db = await openDatabase();
+  const transaction = db.transaction(table, "readwrite");
+  const done = transactionDone(transaction);
+  const store = transaction.objectStore(table);
+  await Promise.all(rows.map((row) => requestResult(store.add(row))));
+  await done;
+}
+
+async function updateRow<T extends TableName>(table: T, id: string, values: TablesUpdate<T>) {
+  const db = await openDatabase();
+  const transaction = db.transaction(table, "readwrite");
+  const done = transactionDone(transaction);
+  const store = transaction.objectStore(table);
+  const current = await requestResult(store.get(id)) as Tables<T> | undefined;
+  if (!current) {
+    transaction.abort();
+    throw new Error("这条记录已不存在，请刷新页面后重试");
+  }
+  const updated = {
+    ...current,
+    ...(values as Record<string, unknown>),
+    id,
+    user_id: LOCAL_USER_ID,
+    updated_at: new Date().toISOString(),
+  } as Tables<T>;
+  await requestResult(store.put(updated));
+  await done;
+  return updated;
+}
+
+async function removeRows(table: TableName, ids: string | string[]) {
+  const targets = new Set(Array.isArray(ids) ? ids : [ids]);
+  if (targets.size === 0) return;
+
+  const db = await openDatabase();
+  const transaction = db.transaction(STORE_NAMES, "readwrite");
+  const done = transactionDone(transaction);
+  const all = await Promise.all(
+    STORE_NAMES.map((name) => requestResult(transaction.objectStore(name).getAll())),
+  );
+  const rows = Object.fromEntries(STORE_NAMES.map((name, i) => [name, all[i]])) as Record<TableName, Record<string, unknown>[]>;
+  const now = new Date().toISOString();
+  const removeIds = (name: TableName, set: Set<string>) => {
+    for (const id of set) transaction.objectStore(name).delete(id);
+  };
+  const patchRows = (name: TableName, predicate: (row: Record<string, unknown>) => boolean, patch: (row: Record<string, unknown>) => Record<string, unknown>) => {
+    for (const row of rows[name]) {
+      if (predicate(row)) transaction.objectStore(name).put({ ...row, ...patch(row), updated_at: now });
+    }
+  };
+
+  switch (table) {
+    case "animations": {
+      const episodeIds = new Set(rows.episodes.filter((r) => targets.has(String(r.animation_id))).map((r) => String(r.id)));
+      const clipIds = new Set(rows.clips.filter((r) => targets.has(String(r.animation_id))).map((r) => String(r.id)));
+      removeIds("animations", targets);
+      removeIds("episodes", episodeIds);
+      removeIds("clips", clipIds);
+      patchRows("resources", (r) => targets.has(String(r.animation_id)) || episodeIds.has(String(r.episode_id)) || clipIds.has(String(r.clip_id)), (r) => ({
+        animation_id: targets.has(String(r.animation_id)) ? null : r.animation_id,
+        episode_id: episodeIds.has(String(r.episode_id)) ? null : r.episode_id,
+        clip_id: clipIds.has(String(r.clip_id)) ? null : r.clip_id,
+      }));
+      patchRows("lesson_items", (r) => clipIds.has(String(r.clip_id)), () => ({ clip_id: null }));
+      patchRows("action_tasks", (r) => targets.has(String(r.animation_id)) || episodeIds.has(String(r.episode_id)) || clipIds.has(String(r.clip_id)), (r) => ({
+        animation_id: targets.has(String(r.animation_id)) ? null : r.animation_id,
+        episode_id: episodeIds.has(String(r.episode_id)) ? null : r.episode_id,
+        clip_id: clipIds.has(String(r.clip_id)) ? null : r.clip_id,
+      }));
+      break;
+    }
+    case "episodes": {
+      const clipIds = new Set(rows.clips.filter((r) => targets.has(String(r.episode_id))).map((r) => String(r.id)));
+      removeIds("episodes", targets);
+      removeIds("clips", clipIds);
+      patchRows("resources", (r) => targets.has(String(r.episode_id)) || clipIds.has(String(r.clip_id)), (r) => ({
+        episode_id: targets.has(String(r.episode_id)) ? null : r.episode_id,
+        clip_id: clipIds.has(String(r.clip_id)) ? null : r.clip_id,
+      }));
+      patchRows("lesson_items", (r) => clipIds.has(String(r.clip_id)), () => ({ clip_id: null }));
+      patchRows("action_tasks", (r) => targets.has(String(r.episode_id)) || clipIds.has(String(r.clip_id)), (r) => ({
+        episode_id: targets.has(String(r.episode_id)) ? null : r.episode_id,
+        clip_id: clipIds.has(String(r.clip_id)) ? null : r.clip_id,
+      }));
+      break;
+    }
+    case "clips":
+      removeIds("clips", targets);
+      patchRows("resources", (r) => targets.has(String(r.clip_id)), () => ({ clip_id: null }));
+      patchRows("lesson_items", (r) => targets.has(String(r.clip_id)), () => ({ clip_id: null }));
+      patchRows("action_tasks", (r) => targets.has(String(r.clip_id)), () => ({ clip_id: null }));
+      break;
+    case "lesson_plans": {
+      const itemIds = new Set(rows.lesson_items.filter((r) => targets.has(String(r.lesson_id))).map((r) => String(r.id)));
+      removeIds("lesson_plans", targets);
+      removeIds("lesson_items", itemIds);
+      patchRows("action_tasks", (r) => targets.has(String(r.lesson_id)), () => ({ lesson_id: null }));
+      break;
+    }
+    default:
+      removeIds(table, targets);
+  }
+  await done;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function useDb() {
   const qc = useQueryClient();
@@ -102,37 +293,112 @@ export function useDb() {
   return {
     refresh,
     async insert<T extends TableName>(table: T, values: TablesInsert<T> | TablesInsert<T>[]) {
-      const { data, error } = await (supabase.from(table) as any).insert(values).select();
-      if (error) throw new Error(friendlyError(error.message));
+      const inputs = (Array.isArray(values) ? values : [values]) as TablesInsert<T>[];
+      const now = new Date().toISOString();
+      const rows = inputs.map((value) => {
+        const item = value as Record<string, unknown>;
+        return {
+          ...item,
+          id: typeof item.id === "string" ? item.id : makeId(),
+          user_id: LOCAL_USER_ID,
+          created_at: typeof item.created_at === "string" ? item.created_at : now,
+          updated_at: now,
+        } as Tables<T>;
+      });
+      try {
+        await insertRows(table, rows);
+      } catch (error) {
+        throw new Error(friendlyError((error as Error).message));
+      }
       await refresh();
-      return data as Tables<T>[];
+      return rows;
     },
     async update<T extends TableName>(table: T, id: string, values: TablesUpdate<T>) {
-      const { data, error } = await (supabase.from(table) as any).update(values).eq("id", id).select();
-      if (error) throw new Error(friendlyError(error.message));
-      await refresh();
-      return (data as Tables<T>[])[0];
+      try {
+        const row = await updateRow(table, id, values);
+        await refresh();
+        return row;
+      } catch (error) {
+        throw new Error(friendlyError((error as Error).message));
+      }
     },
     async remove(table: TableName, ids: string | string[]) {
-      const list = Array.isArray(ids) ? ids : [ids];
-      if (!list.length) return;
-      const { error } = await (supabase.from(table) as any).delete().in("id", list);
-      if (error) throw new Error(friendlyError(error.message));
+      try {
+        await removeRows(table, ids);
+      } catch (error) {
+        throw new Error(friendlyError((error as Error).message));
+      }
       await refresh();
     },
   };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-export function friendlyError(msg: string): string {
-  if (/duplicate key|unique/i.test(msg)) return "已存在同名记录，请勿重复保存";
-  if (/violates check constraint/i.test(msg)) return "填写的数据不符合要求，请检查时间与数值";
-  if (/foreign key/i.test(msg)) return "关联的记录不存在或已被删除";
-  if (/JWT|auth/i.test(msg)) return "登录状态已失效，请重新登录";
-  return msg;
+/* ---------- 本地备份与恢复 ---------- */
+
+export async function exportLocalBackup(): Promise<string> {
+  const backup: BackupFile = {
+    format: "cliplab-local-backup",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    data: await readAllTables(),
+  };
+  return JSON.stringify(backup, null, 2);
+}
+
+export async function importLocalBackup(contents: string): Promise<Record<TableName, number>> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(contents);
+  } catch {
+    throw new Error("备份文件不是有效的 JSON");
+  }
+  if (!parsed || typeof parsed !== "object") throw new Error("备份文件格式不正确");
+  const backup = parsed as Partial<BackupFile>;
+  if (backup.format !== "cliplab-local-backup" || backup.version !== 1 || !backup.data) {
+    throw new Error("无法识别该备份文件，请选择 ClipLab 导出的 JSON 备份");
+  }
+
+  const rows = {} as BackupData;
+  for (const table of STORE_NAMES) {
+    const source = (backup.data as Record<string, unknown>)[table];
+    if (!Array.isArray(source)) throw new Error(`备份文件缺少「${table}」数据`);
+    rows[table] = source.map((value) => {
+      if (!value || typeof value !== "object" || typeof (value as Record<string, unknown>).id !== "string") {
+        throw new Error(`「${table}」中存在无效记录`);
+      }
+      const item = value as Record<string, unknown>;
+      const now = new Date().toISOString();
+      return {
+        ...item,
+        user_id: LOCAL_USER_ID,
+        created_at: typeof item.created_at === "string" ? item.created_at : now,
+        updated_at: typeof item.updated_at === "string" ? item.updated_at : now,
+      } as unknown as Tables<typeof table>;
+    }) as BackupData[typeof table];
+  }
+
+  const db = await openDatabase();
+  const transaction = db.transaction(STORE_NAMES, "readwrite");
+  const done = transactionDone(transaction);
+  for (const table of STORE_NAMES) {
+    const store = transaction.objectStore(table);
+    store.clear();
+    for (const row of rows[table]) store.put(row);
+  }
+  await done;
+  return Object.fromEntries(STORE_NAMES.map((table) => [table, rows[table].length])) as Record<TableName, number>;
 }
 
 /* ---------- 展示辅助 ---------- */
+
+export function friendlyError(msg: string): string {
+  if (/duplicate key|unique|ConstraintError/i.test(msg)) return "已存在同名动画作品，请勿重复保存";
+  if (/violates check constraint|时间|数值/i.test(msg)) return "填写的数据不符合要求，请检查时间与数值";
+  if (/foreign key/i.test(msg)) return "关联的记录不存在或已被删除";
+  if (/IndexedDB|本地数据库|quota/i.test(msg)) return msg;
+  return msg;
+}
 
 export function episodeLabel(ep: Pick<Episode, "season" | "episode_number" | "title"> | undefined | null) {
   if (!ep) return "未指定集数";
@@ -182,4 +448,4 @@ export const todayISO = () => {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
+}

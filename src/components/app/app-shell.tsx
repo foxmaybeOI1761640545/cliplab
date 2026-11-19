@@ -1,6 +1,5 @@
-import { Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { LogOut, Plus, UserRound } from "lucide-react";
+import { Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { HardDrive, Plus } from "lucide-react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 import { AppSidebar } from "./app-sidebar";
 import { GlobalSearch } from "./global-search";
 import { FormsProvider, useForms } from "./forms-context";
@@ -41,35 +40,26 @@ function QuickAdd() {
   );
 }
 
-function UserMenu({ email }: { email?: string | null }) {
-  const qc = useQueryClient();
-  const navigate = useNavigate();
-  const signOut = async () => {
-    await qc.cancelQueries();
-    qc.clear();
-    await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
-  };
+function LocalStorageMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="账户">
-          <UserRound className="size-4" />
+        <Button variant="ghost" size="icon" aria-label="本地数据管理">
+          <HardDrive className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel className="max-w-56 truncate text-xs font-normal text-muted-foreground">{email ?? "已登录"}</DropdownMenuLabel>
+        <DropdownMenuLabel>本地存储模式</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={signOut}>
-          <LogOut className="size-4" />
-          退出登录
+        <DropdownMenuItem asChild>
+          <Link to="/data">数据备份与恢复</Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-export function AppShell({ email }: { email?: string | null }) {
+export function AppShell() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   return (
     <ConfirmProvider>
@@ -84,11 +74,10 @@ export function AppShell({ email }: { email?: string | null }) {
                   <p className="text-[11px] leading-none text-muted-foreground">当前工作区</p>
                   <p className="truncate font-display text-sm font-semibold">我的备课 · {pageTitle(path)}</p>
                 </div>
-                <div className="flex flex-1 justify-center">
-                  <GlobalSearch />
-                </div>
+                <div className="flex flex-1 justify-center"><GlobalSearch /></div>
+                <Badge variant="secondary" className="hidden sm:inline-flex">本地模式</Badge>
                 <QuickAdd />
-                <UserMenu email={email} />
+                <LocalStorageMenu />
               </header>
               <main className="mx-auto w-full max-w-7xl flex-1 px-3 py-5 sm:px-6 sm:py-7 print:max-w-none print:p-0">
                 <Outlet />

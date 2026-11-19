@@ -1,30 +1,18 @@
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { allQueries } from "@/lib/db";
 import { AppShell } from "@/components/app/app-shell";
 import { ErrorState, LoadingState } from "@/components/app/states";
 
 export const Route = createFileRoute("/_authenticated")({
+  // All user data is stored in this browser's IndexedDB. No account is required.
   ssr: false,
-  beforeLoad: async ({ location }) => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      throw redirect({ to: "/auth", search: { redirect: location.pathname } });
-    }
-    return { user: data.user };
-  },
   loader: async ({ context }) => {
-    await Promise.all(allQueries.map((qo) => context.queryClient.ensureQueryData(qo)));
+    await Promise.all(allQueries.map((query) => context.queryClient.ensureQueryData(query)));
   },
-  pendingComponent: () => <LoadingState />,
+  pendingComponent: () => <LoadingState label="正在读取本地备课资料…" />,
   errorComponent: AuthedError,
-  component: AuthedLayout,
+  component: () => <AppShell />,
 });
-
-function AuthedLayout() {
-  const { user } = Route.useRouteContext();
-  return <AppShell email={user.email} />;
-}
 
 function AuthedError({ error }: { error: unknown }) {
   const router = useRouter();
