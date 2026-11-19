@@ -64,10 +64,10 @@ function EpisodeDetailPage() {
             <Button variant="outline" onClick={() => forms.openEpisode(episode)}><Pencil className="size-4" />编辑集数</Button>
             <Button
               variant="destructive"
-              onClick={() => deleteActions.episode(episode, () => navigate({
-                to: animation ? "/animations/$animationId" : "/animations",
-                params: animation ? { animationId: animation.id } : undefined,
-              }))}
+              onClick={() => deleteActions.episode(episode, () => {
+                if (animation) navigate({ to: "/animations/$animationId", params: { animationId: animation.id } });
+                else navigate({ to: "/animations" });
+              })}
             >
               <Trash2 className="size-4" />删除
             </Button>
