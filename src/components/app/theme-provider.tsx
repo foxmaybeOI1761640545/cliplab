@@ -29,6 +29,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     const root = document.documentElement;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const apply = () => {
@@ -42,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (preference !== "system") return;
     media.addEventListener("change", apply);
     return () => media.removeEventListener("change", apply);
-  }, [preference]);
+  }, [preference, ready]);
 
   useEffect(() => {
     if (!ready) return;
