@@ -48,6 +48,16 @@ function makeSearchText(...values: (string | null | undefined)[]) {
   return values.filter(Boolean).join(" ").toLocaleLowerCase();
 }
 
+function fuzzyMatch(text: string, term: string) {
+  let position = 0;
+  for (const character of term) {
+    const match = text.indexOf(character, position);
+    if (match === -1) return false;
+    position = match + 1;
+  }
+  return true;
+}
+
 function makeSearchEntry(kind: SearchKind, row: unknown, data: AllData): SearchEntry {
   switch (kind) {
     case "animation": {
@@ -249,7 +259,7 @@ function GlobalSearchDialog({
 
     for (const entry of entries) {
       if (result[entry.kind].length >= MAX_RESULTS_PER_GROUP) continue;
-      if (terms.every((term) => entry.searchText.includes(term))) result[entry.kind].push(entry);
+      if (terms.every((term) => fuzzyMatch(entry.searchText, term))) result[entry.kind].push(entry);
       if (GROUPS.every((group) => result[group.kind].length >= MAX_RESULTS_PER_GROUP)) break;
     }
     return result;
