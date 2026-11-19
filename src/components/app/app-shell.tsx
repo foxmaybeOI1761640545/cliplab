@@ -16,6 +16,7 @@ import { GlobalSearch } from "./global-search";
 import { FormsProvider, useForms } from "./forms-context";
 import { ConfirmProvider } from "./confirm-context";
 import { pageTitle } from "./nav";
+import { ThemeToggle } from "./theme-toggle";
 
 function QuickAdd() {
   const f = useForms();
@@ -76,6 +77,7 @@ export function AppShell() {
                 </div>
                 <div className="flex flex-1 justify-center"><GlobalSearch /></div>
                 <Badge variant="secondary" className="hidden sm:inline-flex">本地模式</Badge>
+                <ThemeToggle />
                 <QuickAdd />
                 <LocalStorageMenu />
               </header>
