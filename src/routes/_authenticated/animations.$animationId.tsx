@@ -114,6 +114,14 @@ function AnimationDetailPage() {
               <span className="inline-flex items-center gap-1.5"><Layers3 className="size-4" />{clipCount} 个片段</span>
               <span className="inline-flex items-center gap-1.5"><Clock3 className="size-4" />更新于 {new Date(animation.updated_at).toLocaleString("zh-CN")}</span>
             </div>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/clips" search={{ animation: animation.id }}>查看这部动画的片段</Link>
+              </Button>
+              <Button size="sm" onClick={() => forms.openClip(undefined, { animation_id: animation.id })}>
+                <Plus className="size-4" />新增片段
+              </Button>
+            </div>
           </div>
         </div>
       </section>
