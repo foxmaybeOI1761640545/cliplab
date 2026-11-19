@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, ThemeInput } from "../form-bits";
 import { FormDialog, emptyToNull } from "./form-dialog";
+import { DemoSwitchField } from "@/components/app/demo-switch-field";
 import { useAllData, useDb, type Animation } from "@/lib/db";
 import { findDuplicateAnimation } from "@/lib/animation-catalog";
 
@@ -21,6 +22,7 @@ export function AnimationForm({
   const data = useAllData();
   const db = useDb();
   const [v, setV] = useState({
+    is_demo: record?.is_demo ?? false,
     name: record?.name ?? "",
     aliases: record?.aliases ?? "",
     production_info: record?.production_info ?? "",
@@ -45,6 +47,7 @@ export function AnimationForm({
     setBusy(true);
     try {
       const payload = {
+        is_demo: v.is_demo,
         name,
         aliases: emptyToNull(v.aliases),
         production_info: emptyToNull(v.production_info),
@@ -92,6 +95,7 @@ export function AnimationForm({
       <Field label="备注" htmlFor="an-notes">
         <Textarea id="an-notes" rows={2} value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} />
       </Field>
+      <DemoSwitchField checked={v.is_demo} onCheckedChange={(checked) => setV((current) => ({ ...current, is_demo: checked }))} />
     </FormDialog>
   );
 }

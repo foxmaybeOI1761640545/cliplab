@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, SimpleSelect } from "../form-bits";
 import { FormDialog, emptyToNull, numOrNull } from "./form-dialog";
+import { DemoSwitchField } from "@/components/app/demo-switch-field";
 import { normalize, useAllData, useDb, type Episode } from "@/lib/db";
 import { formatTimecode, parseTimecode } from "@/lib/time";
 
@@ -21,6 +22,7 @@ export function EpisodeForm({
   const data = useAllData();
   const db = useDb();
   const [v, setV] = useState({
+    is_demo: record?.is_demo ?? false,
     animation_id: record?.animation_id ?? defaults?.animation_id ?? null,
     season: record?.season?.toString() ?? "",
     episode_number: record?.episode_number?.toString() ?? "",
@@ -60,6 +62,7 @@ export function EpisodeForm({
     setBusy(true);
     try {
       const payload = {
+        is_demo: v.is_demo,
         animation_id: v.animation_id!,
         season: season as number | null,
         episode_number: epNo as number | null,
@@ -121,6 +124,7 @@ export function EpisodeForm({
       <Field label="备注" htmlFor="ep-notes">
         <Textarea id="ep-notes" rows={2} value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} />
       </Field>
+      <DemoSwitchField checked={v.is_demo} onCheckedChange={(checked) => setV((current) => ({ ...current, is_demo: checked }))} />
     </FormDialog>
   );
 }

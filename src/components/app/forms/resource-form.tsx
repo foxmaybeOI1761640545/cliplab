@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Field, FormGroup, SimpleSelect } from "../form-bits";
 import { FormDialog, emptyToNull } from "./form-dialog";
+import { DemoSwitchField } from "@/components/app/demo-switch-field";
 import { episodeLabel, todayISO, useAllData, useDb, type Resource } from "@/lib/db";
 import { COPYRIGHT_STATUSES, PLAY_STATUSES } from "@/lib/constants";
 
@@ -27,6 +28,7 @@ export function ResourceForm({
   const initClip = record?.clip_id ?? defaults?.clip_id ?? null;
   const clip0 = initClip ? data.clipById.get(initClip) : undefined;
   const [v, setV] = useState({
+    is_demo: record?.is_demo ?? false,
     clip_id: initClip,
     animation_id: record?.animation_id ?? defaults?.animation_id ?? clip0?.animation_id ?? null,
     episode_id: record?.episode_id ?? defaults?.episode_id ?? clip0?.episode_id ?? null,
@@ -57,6 +59,7 @@ export function ResourceForm({
     setBusy(true);
     try {
       const payload = {
+        is_demo: v.is_demo,
         clip_id: v.clip_id,
         animation_id: v.animation_id,
         episode_id: v.episode_id,
@@ -181,6 +184,7 @@ export function ResourceForm({
           <Input id="res-ver" value={v.verifier} onChange={(e) => set({ verifier: e.target.value })} placeholder="如：教室电脑 / 本人手机" />
         </Field>
       </div>
+      <DemoSwitchField checked={v.is_demo} onCheckedChange={(checked) => setV((current) => ({ ...current, is_demo: checked }))} />
     </FormDialog>
   );
 }
