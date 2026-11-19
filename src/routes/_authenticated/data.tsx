@@ -98,7 +98,7 @@ function DataManagementPage() {
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <Badge variant="secondary"><HardDrive className="mr-1 size-3" />本地优先</Badge>
         <Badge variant="outline">无需登录</Badge>
-        <Badge variant="outline">离线可读写</Badge>
+        <Badge variant="outline">资料不上传云端</Badge>
       </div>
 
       <Card className="mb-5">
@@ -107,7 +107,7 @@ function DataManagementPage() {
             <Database className="size-5 text-primary" />
             <CardTitle>本地资料概况</CardTitle>
           </div>
-          <CardDescription>这些记录保存在当前浏览器的本地数据库中，不会自动上传到 Supabase。</CardDescription>
+          <CardDescription>这些记录保存在当前浏览器的 IndexedDB 中，不会自动上传到 Supabase。首次打开网站仍需联网加载页面资源。</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
