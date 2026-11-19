@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   BookOpenCheck,
@@ -687,7 +687,7 @@ function ClipLibraryPage() {
   );
 }
 
-function DetailText({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | null | undefined }) {
+function DetailText({ icon, label, value }: { icon: ReactNode; label: string; value: string | null | undefined }) {
   return (
     <div className="space-y-1">
       <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">{icon}{label}</p>
