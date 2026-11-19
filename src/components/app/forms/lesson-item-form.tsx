@@ -41,12 +41,19 @@ export function LessonItemFormDialog({
     title: record?.title ?? initialClip?.name ?? "",
     clip_id: record?.clip_id ?? null,
     stage: (record?.stage as Stage | undefined) ?? initialStage,
-    minutes: String(record?.minutes ?? 5),
-    themes: record?.themes ?? initialClip?.themes ?? [],
+    minutes: String(record?.minutes ?? initialClip?.est_class_minutes ?? initialClip?.play_minutes ?? 5),
+    themes: record?.themes?.length ? record.themes : initialClip?.themes ?? [],
     questions: record?.questions ?? initialClip?.questions ?? "",
     discussion: record?.discussion ?? initialClip?.discussion_goal ?? "",
     summary: record?.summary ?? initialClip?.summary ?? "",
   }));
+  const [manualFields, setManualFields] = useState<Set<keyof FormValues>>(() => record
+    ? new Set(["title", "minutes", "themes", "questions", "discussion", "summary"])
+    : new Set());
+  const changeValue = <K extends keyof FormValues,>(key: K, value: FormValues[K]) => {
+    setManualFields((previous) => new Set(previous).add(key));
+    setValues((current) => ({ ...current, [key]: value }));
+  };
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -72,14 +79,14 @@ export function LessonItemFormDialog({
     setValues((current) => ({
       ...current,
       clip_id: clipId,
-      title: current.title.trim() ? current.title : clip.name,
-      themes: current.themes.length ? current.themes : clip.themes,
-      questions: current.questions.trim() ? current.questions : clip.questions ?? "",
-      discussion: current.discussion.trim() ? current.discussion : clip.discussion_goal ?? "",
-      summary: current.summary.trim() ? current.summary : clip.summary ?? "",
-      minutes: current.minutes === "5"
-        ? String(clip.est_class_minutes ?? clip.play_minutes ?? 5)
-        : current.minutes,
+      title: manualFields.has("title") ? current.title : clip.name,
+      themes: manualFields.has("themes") ? current.themes : clip.themes,
+      questions: manualFields.has("questions") ? current.questions : clip.questions ?? "",
+      discussion: manualFields.has("discussion") ? current.discussion : clip.discussion_goal ?? "",
+      summary: manualFields.has("summary") ? current.summary : clip.summary ?? "",
+      minutes: manualFields.has("minutes")
+        ? current.minutes
+        : String(clip.est_class_minutes ?? clip.play_minutes ?? 5),
     }));
   };
 
@@ -156,7 +163,7 @@ export function LessonItemFormDialog({
               <SimpleSelect
                 id="lesson-item-stage"
                 value={values.stage}
-                onChange={(value) => value && setValues((current) => ({ ...current, stage: value as Stage }))}
+                onChange={(value) => value && changeValue("stage", value as Stage)}
                 options={STAGES}
               />
             </Field>
@@ -187,7 +194,7 @@ export function LessonItemFormDialog({
                 <Input
                   id="lesson-item-title"
                   value={values.title}
-                  onChange={(event) => setValues((current) => ({ ...current, title: event.target.value }))}
+                  onChange={(event) => changeValue("title", event.target.value)}
                   placeholder="例如：观看片段并发现冲突"
                 />
               </Field>
@@ -200,14 +207,14 @@ export function LessonItemFormDialog({
                   step="0.5"
                   inputMode="decimal"
                   value={values.minutes}
-                  onChange={(event) => setValues((current) => ({ ...current, minutes: event.target.value }))}
+                  onChange={(event) => changeValue("minutes", event.target.value)}
                 />
               </Field>
             </div>
             <Field label="主题标签">
               <ThemeInput
                 value={values.themes}
-                onChange={(themes) => setValues((current) => ({ ...current, themes }))}
+                onChange={(themes) => changeValue("themes", themes)}
                 suggestions={data.clips.flatMap((clip) => clip.themes)}
               />
             </Field>
@@ -219,7 +226,7 @@ export function LessonItemFormDialog({
                 id="lesson-item-questions"
                 rows={3}
                 value={values.questions}
-                onChange={(event) => setValues((current) => ({ ...current, questions: event.target.value }))}
+                onChange={(event) => changeValue("questions", event.target.value)}
                 placeholder="引导学生观察、思考的问题"
               />
             </Field>
@@ -228,7 +235,7 @@ export function LessonItemFormDialog({
                 id="lesson-item-discussion"
                 rows={3}
                 value={values.discussion}
-                onChange={(event) => setValues((current) => ({ ...current, discussion: event.target.value }))}
+                onChange={(event) => changeValue("discussion", event.target.value)}
                 placeholder="学生要讨论什么、达成什么理解"
               />
             </Field>
@@ -237,7 +244,7 @@ export function LessonItemFormDialog({
                 id="lesson-item-summary"
                 rows={3}
                 value={values.summary}
-                onChange={(event) => setValues((current) => ({ ...current, summary: event.target.value }))}
+                onChange={(event) => changeValue("summary", event.target.value)}
                 placeholder="本环节希望学生带走的结论"
               />
             </Field>
