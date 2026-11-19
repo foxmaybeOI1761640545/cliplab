@@ -40,22 +40,31 @@ function ResourceReviewPage() {
   const [playFilter, setPlayFilter] = useState("全部");
   const [copyrightFilter, setCopyrightFilter] = useState("全部");
   const [demoFilter, setDemoFilter] = useState<DemoFilter>("真实数据");
+  const [showAllUnregistered, setShowAllUnregistered] = useState(false);
 
-  const realResources = data.resources.filter((resource) => !resource.is_demo);
+  const isDemoResource = (resource: Resource) => {
+    const clip = resource.clip_id ? data.clipById.get(resource.clip_id) : undefined;
+    const episode = resource.episode_id ? data.episodeById.get(resource.episode_id) : undefined;
+    const animationId = resource.animation_id ?? clip?.animation_id ?? episode?.animation_id;
+    const animation = animationId ? data.animationById.get(animationId) : undefined;
+    return Boolean(resource.is_demo || clip?.is_demo || episode?.is_demo || animation?.is_demo);
+  };
+
+  const realResources = data.resources.filter((resource) => !isDemoResource(resource));
   const realClips = data.clips.filter((clip) => {
     const animation = data.animationById.get(clip.animation_id);
     const episode = clip.episode_id ? data.episodeById.get(clip.episode_id) : undefined;
     return !clip.is_demo && !animation?.is_demo && !episode?.is_demo;
   });
   const unregisteredClips = realClips.filter((clip) =>
-    !data.resources.some((resource) => resource.clip_id === clip.id && !resource.is_demo),
+    !data.resources.some((resource) => resource.clip_id === clip.id && !isDemoResource(resource)),
   );
 
   const filtered = useMemo(() => {
     const term = query.trim().toLocaleLowerCase();
     return data.resources.filter((resource) => {
-      if (demoFilter === "真实数据" && resource.is_demo) return false;
-      if (demoFilter === "DEMO" && !resource.is_demo) return false;
+      if (demoFilter === "真实数据" && isDemoResource(resource)) return false;
+      if (demoFilter === "DEMO" && !isDemoResource(resource)) return false;
       if (playFilter === "需要核实" && !needsPlayVerification(resource)) return false;
       if (playFilter !== "全部" && playFilter !== "需要核实" && resource.play_status !== playFilter) return false;
       if (copyrightFilter === "需要核实" && !needsCopyrightVerification(resource)) return false;
@@ -117,7 +126,7 @@ function ResourceReviewPage() {
           <p className="py-3 text-sm text-muted-foreground">目前所有真实片段都至少关联了一条非 DEMO 资源记录。</p>
         ) : (
           <div className="grid gap-2 md:grid-cols-2">
-            {unregisteredClips.slice(0, 8).map((clip) => (
+            {unregisteredClips.slice(0, showAllUnregistered ? unregisteredClips.length : 8).map((clip) => (
               <UnregisteredClip
                 key={clip.id}
                 clip={clip}
@@ -129,7 +138,12 @@ function ResourceReviewPage() {
           </div>
         )}
         {unregisteredClips.length > 8 && (
-          <p className="mt-3 text-xs text-muted-foreground">另有 {unregisteredClips.length - 8} 个片段未显示，可通过片段库搜索后添加资源。</p>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">{showAllUnregistered ? "已显示全部未登记片段" : "另有 " + (unregisteredClips.length - 8) + " 个片段未展开"}</p>
+            <Button size="sm" variant="ghost" onClick={() => setShowAllUnregistered((value) => !value)}>
+              {showAllUnregistered ? "收起" : "显示全部"}
+            </Button>
+          </div>
         )}
       </Section>
 
@@ -233,6 +247,7 @@ function ResourceCard({
   const animationId = resource.animation_id ?? clip?.animation_id ?? episode?.animation_id;
   const animation = animationId ? data.animationById.get(animationId) : undefined;
   const linkState = inspectResourceUrl(resource.url);
+  const isDemo = Boolean(resource.is_demo || clip?.is_demo || episode?.is_demo || animation?.is_demo);
   const playNeedsReview = needsPlayVerification(resource);
   const copyrightNeedsReview = needsCopyrightVerification(resource);
   const playTone = linkState === "placeholder" || linkState === "invalid"
@@ -249,7 +264,7 @@ function ResourceCard({
             {[animation?.name, episode ? episodeLabel(episode) : null, resource.platform].filter(Boolean).join(" · ") || "未关联对象"}
           </p>
         </div>
-        <DemoBadge show={resource.is_demo} />
+        <DemoBadge show={isDemo} />
       </div>
 
       <div className="flex flex-wrap gap-1.5">
