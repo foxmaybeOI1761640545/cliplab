@@ -92,7 +92,7 @@ function makeSuggestion(
 
   const alreadyTracked = Boolean(target && data.tasks.some((task) =>
     !isDemo(task) &&
-    task.status !== "已完成" &&
+    task.status !== "已完成" && task.status !== "暂缓" &&
     task.task_type === input.task_type &&
     task[target.field] === target.value,
   ));
