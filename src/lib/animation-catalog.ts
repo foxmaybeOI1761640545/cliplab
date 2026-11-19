@@ -15,6 +15,27 @@ const collator = new Intl.Collator("zh-CN", { numeric: true, sensitivity: "base"
 const normalizeText = (value: string) =>
   value.normalize("NFKC").trim().toLocaleLowerCase().replace(/\s+/g, "");
 
+const splitAliases = (value: string | null | undefined) =>
+  (value ?? "").split(/[、,，;；|/]/).map((alias) => alias.trim()).filter(Boolean);
+
+/** Finds a different animation whose name or alias overlaps the proposed name/aliases. */
+export function findDuplicateAnimation<T extends Pick<AnimationCatalogRecord, "id" | "name" | "aliases">>(
+  records: readonly T[],
+  candidate: { name: string; aliases?: string | null; excludeId?: string | null },
+): T | undefined {
+  const candidateKeys = new Set(
+    [candidate.name, ...splitAliases(candidate.aliases)].map(normalizeText).filter(Boolean),
+  );
+  if (candidateKeys.size === 0) return undefined;
+
+  return records.find((record) => {
+    if (record.id === candidate.excludeId) return false;
+    return [record.name, ...splitAliases(record.aliases)]
+      .map(normalizeText)
+      .some((key) => candidateKeys.has(key));
+  });
+}
+
 export function filterAndSortAnimations<T extends AnimationCatalogRecord>(
   records: T[],
   options: { query?: string; theme?: string | null; sort?: AnimationCatalogSort },

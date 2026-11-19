@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Field, ThemeInput } from "../form-bits";
 import { FormDialog, emptyToNull } from "./form-dialog";
 import { useAllData, useDb, type Animation } from "@/lib/db";
-import { splitTags } from "@/lib/csv";
+import { findDuplicateAnimation } from "@/lib/animation-catalog";
 
 export function AnimationForm({
   record,
@@ -35,11 +35,10 @@ export function AnimationForm({
   const submit = async () => {
     const name = v.name.trim();
     if (!name) return setErr("请填写动画名称");
-    const newKeys = new Set([name, ...splitTags(v.aliases)].map(normalize).filter(Boolean));
-    const dup = data.animations.find((a) => {
-      if (a.id === record?.id) return false;
-      const existingKeys = [a.name, ...splitTags(a.aliases)].map(normalize).filter(Boolean);
-      return existingKeys.some((candidate) => newKeys.has(candidate));
+    const dup = findDuplicateAnimation(data.animations, {
+      name,
+      aliases: v.aliases,
+      excludeId: record?.id,
     });
     if (dup) return setErr(`名称或别名与「${dup.name}」重复，请直接在该作品下添加集数`);
     setErr(null);
