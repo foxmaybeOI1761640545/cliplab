@@ -290,12 +290,15 @@ function ResourceCard({
         </p>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-        <p className="text-[11px] text-muted-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 md:flex-nowrap md:gap-3">
+        <p
+          className="min-w-0 text-[11px] text-muted-foreground md:flex-1 md:truncate md:whitespace-nowrap"
+          title={[resource.verified_at ? "核实日期：" + resource.verified_at : "尚无核实日期", resource.verifier].filter(Boolean).join(" · ")}
+        >
           {resource.verified_at ? "核实日期：" + resource.verified_at : "尚无核实日期"}
           {resource.verifier ? " · " + resource.verifier : ""}
         </p>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap justify-end gap-1.5 md:shrink-0 md:flex-nowrap">
           {canOpenResourceUrl(resource.url) ? (
             <Button asChild size="sm" variant="outline">
               <a href={resource.url!} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-3.5" />打开链接</a>
