@@ -1,5 +1,5 @@
 import { queryOptions, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { createContext, createElement, useContext, useMemo, type ReactNode } from "react";
+import { useMemo } from "react";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Animation = Tables<"animations">;
@@ -130,7 +130,7 @@ export const q = {
 
 export const allQueries = Object.values(q);
 
-function useAllDataQuery() {
+export function useAllData() {
   const animations = useSuspenseQuery(q.animations).data;
   const episodes = useSuspenseQuery(q.episodes).data;
   const clips = useSuspenseQuery(q.clips).data;
@@ -176,20 +176,7 @@ function useAllDataQuery() {
     };
   }, [animations, episodes, clips, resources, lessonPlans, lessonItems, tasks]);
 }
-export type AllData = ReturnType<typeof useAllDataQuery>;
-
-const AllDataContext = createContext<AllData | null>(null);
-
-export function AllDataProvider({ children }: { children: ReactNode }) {
-  const data = useAllDataQuery();
-  return createElement(AllDataContext.Provider, { value: data }, children);
-}
-
-export function useAllData(): AllData {
-  const data = useContext(AllDataContext);
-  if (!data) throw new Error("useAllData 必须在 AllDataProvider 内使用");
-  return data;
-}
+export type AllData = ReturnType<typeof useAllData>;
 
 /* ---------- 本地数据写入 ---------- */
 
